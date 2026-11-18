@@ -62,3 +62,4 @@ export function getMascot(id) {
         glow: `hsla(${hue1}, 95%, 60%, 0.6)`
     };
 }
+

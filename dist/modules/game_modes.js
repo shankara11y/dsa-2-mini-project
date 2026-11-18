@@ -378,3 +378,4 @@ export class GameModes {
         localStorage.setItem('podium_rush_leaderboard', JSON.stringify(this.leaderboard));
     }
 }
+

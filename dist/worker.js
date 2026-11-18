@@ -12,13 +12,14 @@ let autoDistribution = 'zipf'; // 'uniform', 'zipf', 'spike'
 let autoProducts = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 let viralTarget = 'A';
 
-// Helper to convert C++ embind vectors into plain JS arrays for postMessage
+// Helper to convert C++ embind vectors or native arrays
 function vectorToArray(vec) {
     if (!vec) return [];
+    if (Array.isArray(vec)) return vec;
     const arr = [];
-    const sz = vec.size();
+    const sz = typeof vec.size === 'function' ? vec.size() : vec.length;
     for (let i = 0; i < sz; i++) {
-        arr.push(vec.get(i));
+        arr.push(typeof vec.get === 'function' ? vec.get(i) : vec[i]);
     }
     return arr;
 }
@@ -26,17 +27,10 @@ function vectorToArray(vec) {
 function getFullStateSnapshot() {
     if (!tracker) return null;
 
-    const topKVec = tracker.getTopK();
-    const topK = vectorToArray(topKVec);
-
-    const heapVec = tracker.getHeapSnapshot();
-    const heapSnapshot = vectorToArray(heapVec);
-
-    const traceVec = tracker.getLastOperationTrace();
-    const lastTrace = vectorToArray(traceVec);
-
-    const countsVec = tracker.getAllCounts();
-    const allCounts = vectorToArray(countsVec);
+    const topK = vectorToArray(tracker.getTopK());
+    const heapSnapshot = vectorToArray(tracker.getHeapSnapshot());
+    const lastTrace = vectorToArray(tracker.getLastOperationTrace());
+    const allCounts = vectorToArray(tracker.getAllCounts());
 
     return {
         topK,
@@ -111,11 +105,7 @@ self.onmessage = async (e) => {
             }
 
             case 'RECORD_BATCH': {
-                const vecStr = new Module.VectorString();
-                for (const item of payload.batch) {
-                    vecStr.push_back(item);
-                }
-                tracker.recordBatch(vecStr);
+                tracker.recordBatch(payload.batch);
                 self.postMessage({
                     action: 'BATCH_RECORDED',
                     msgId,
