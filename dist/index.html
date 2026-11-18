@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PODIUM RUSH — Real-Time Top-K Trending Products (DSA Visualizer)</title>
+    <meta name="description" content="Interactive 3D podium game visualizing the Top-K Trending Products problem using C++17 WebAssembly, Indexed Min-Heap, and Hash Maps.">
+    <meta name="theme-color" content="#0b0f19">
+
+    <!-- Open Graph / Meta -->
+    <meta property="og:title" content="PODIUM RUSH — Real-Time Top-K Trending Products">
+    <meta property="og:description" content="Explore real-time data structures with WebAssembly: Custom Indexed Min-Heap vs Sorting vs Lazy Deletion.">
+    <meta property="og:type" content="website">
+
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏆</text></svg>">
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;700;900&family=Press+Start+2P&display=swap" rel="stylesheet">
+
+    <!-- GSAP CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Background Canvas for Confetti & Particles -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Loading Splash Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-logo">🏆 PODIUM RUSH</div>
+            <div class="loading-spinner"></div>
+            <div class="loading-text" id="loading-status">Compiling C++17 Core with WebAssembly...</div>
+            <div class="loading-progress-bar">
+                <div class="loading-progress-fill" id="loading-fill"></div>
+            </div>
+            <div class="loading-subtext">Initializing Custom Indexed Min-Heap & O(1) Hash Map</div>
+        </div>
+    </div>
+
+    <!-- MAIN APP CONTAINER -->
+    <div id="app" class="app-container hidden">
+
+        <!-- TOP BAR -->
+        <header class="top-bar">
+            <div class="brand">
+                <div class="logo-icon">🏆</div>
+                <div class="brand-text">
+                    <h1 class="logo-title">PODIUM RUSH</h1>
+                    <span class="logo-tag">TOP-K REAL-TIME DSA ARENA</span>
+                </div>
+            </div>
+
+            <!-- Global Tickers & Controls -->
+            <div class="top-stats">
+                <div class="stat-pill" title="Total sales processed by C++ WebAssembly">
+                    <span class="stat-label">TOTAL SALES</span>
+                    <span class="stat-val odometer" id="top-total-sales">0</span>
+                </div>
+                <div class="stat-pill k-selector-pill">
+                    <label for="k-slider" class="stat-label">PODIUM SIZE (K):</label>
+                    <input type="range" id="k-slider" min="1" max="10" value="3" class="slider" aria-label="Select K value">
+                    <span class="stat-val neon-k" id="k-display">3</span>
+                </div>
+            </div>
+
+            <!-- Mode Selector Nav -->
+            <div class="mode-tabs">
+                <button class="mode-btn active" data-mode="sandbox" aria-label="Sandbox Mode">🏟️ Sandbox</button>
+                <button class="mode-btn" data-mode="challenge" aria-label="Challenge Mode">🎯 Challenge</button>
+                <button class="mode-btn" data-mode="survival" aria-label="Survival Mode">🔥 Survival</button>
+            </div>
+
+            <!-- Utility Toggles -->
+            <div class="top-actions">
+                <button id="sound-btn" class="icon-btn" title="Toggle Sound (M)" aria-label="Toggle Sound">🔊</button>
+                <button id="theme-btn" class="icon-btn" title="Toggle Theme" aria-label="Toggle Theme">🌙</button>
+                <button id="contrast-btn" class="icon-btn" title="Toggle High Contrast" aria-label="High Contrast">👁️</button>
+                <button id="self-test-btn" class="btn btn-outline-cyan" title="Run Unit Self-Tests">🧪 Self-Test</button>
+                <button id="help-btn" class="icon-btn btn-highlight" title="Guided DSA Tour (?)" aria-label="Help Tour">❓</button>
+            </div>
+        </header>
+
+        <!-- THREE-PANEL ARENA LAYOUT -->
+        <main class="main-layout">
+
+            <!-- LEFT PANEL: CONTROL ROOM -->
+            <aside class="panel left-panel" id="panel-control">
+                <div class="panel-header">
+                    <h3>🕹️ Control Room</h3>
+                    <span class="badge badge-cyan">INPUT STREAM</span>
+                </div>
+
+                <div class="panel-scroll">
+                    <!-- Product Quick-Select Grid -->
+                    <div class="control-section">
+                        <label class="section-label">SELECT PRODUCT TO SELL (Keys 1-9):</label>
+                        <div class="product-grid" id="product-grid">
+                            <!-- Populated dynamically via JS with mascots -->
+                        </div>
+                        <div class="custom-id-row">
+                            <input type="text" id="custom-prod-input" placeholder="Custom ID (e.g. VIP_1)" maxlength="12" class="input-text">
+                            <button id="add-custom-btn" class="btn btn-small btn-accent">+ Pick</button>
+                        </div>
+                    </div>
+
+                    <!-- Instant Sale Triggers -->
+                    <div class="control-section">
+                        <label class="section-label">SALES TRIGGER (Active: <strong id="selected-prod-label" class="neon-magenta">A</strong>):</label>
+                        <div class="btn-grid-2">
+                            <button id="sell-1-btn" class="btn btn-action">⚡ Sell 1 (Space)</button>
+                            <button id="sell-10-btn" class="btn btn-action">⚡ Sell x10</button>
+                            <button id="sell-100-btn" class="btn btn-action">💥 Sell x100</button>
+                            <button id="flash-sale-btn" class="btn btn-action btn-flash">🔥 Flash Burst (x250)</button>
+                        </div>
+                    </div>
+
+                    <!-- Auto-Stream Simulation -->
+                    <div class="control-section auto-stream-box">
+                        <div class="section-header-row">
+                            <label class="section-label">AUTO-STREAM SIMULATOR</label>
+                            <span id="stream-status-badge" class="badge badge-off">IDLE</span>
+                        </div>
+                        <div class="stream-controls">
+                            <div class="slider-row">
+                                <span class="slider-label">Speed: <strong id="speed-display">50</strong> events/s</span>
+                                <input type="range" id="speed-slider" min="1" max="1000" value="50" class="slider">
+                            </div>
+                            <div class="radio-group">
+                                <label><input type="radio" name="distribution" value="zipf" checked> Zipf (80/20 Skewed)</label>
+                                <label><input type="radio" name="distribution" value="uniform"> Uniform (Equal)</label>
+                                <label><input type="radio" name="distribution" value="spike"> Viral Spike</label>
+                            </div>
+                            <button id="auto-stream-toggle" class="btn btn-primary full-width">▶ Start Auto-Stream</button>
+                        </div>
+                    </div>
+
+                    <!-- Custom Event Stream Replay -->
+                    <div class="control-section">
+                        <div class="section-header-row">
+                            <label class="section-label">STREAM REPLAY & PRESETS</label>
+                        </div>
+                        <div class="preset-pills">
+                            <button class="pill-btn" data-stream="A B A C B A D B">Example (A B A C B A D B)</button>
+                            <button class="pill-btn" data-stream="A B C D A B C D A B">Ties Showdown</button>
+                            <button class="pill-btn" data-stream="A A A B B C D E F G H A Z Z Z Z Z">Underdog Surge</button>
+                        </div>
+                        <textarea id="stream-input" class="textarea-stream" rows="2" placeholder="Paste stream e.g. A B A C B A D B">A B A C B A D B</textarea>
+                        <div class="replay-btn-row">
+                            <button id="replay-play-btn" class="btn btn-small btn-outline-cyan">▶ Play All</button>
+                            <button id="replay-step-btn" class="btn btn-small btn-outline-gold">⏭ Step (1)</button>
+                            <button id="replay-reset-btn" class="btn btn-small btn-outline-red">↺ Reset Stream</button>
+                        </div>
+                    </div>
+
+                    <!-- Global Reset -->
+                    <div class="control-section">
+                        <button id="arena-reset-btn" class="btn btn-danger full-width">🗑️ Reset Arena & Heap (R)</button>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- CENTER STAGE: THE MARKETPLACE ARENA -->
+            <section class="stage-section" id="stage-center">
+
+                <!-- Dynamic Game Mode Container (For Challenge & Survival) -->
+                <div id="game-mode-panel" class="game-mode-panel"></div>
+
+                <!-- Arena Center Stage -->
+                <div class="arena-stage-wrapper">
+                    <div class="arena-lights">
+                        <div class="light-beam light-left"></div>
+                        <div class="light-beam light-center"></div>
+                        <div class="light-beam light-right"></div>
+                    </div>
+
+                    <!-- Podium Step Container -->
+                    <div class="podium-container" id="podium-container">
+                        <!-- Dynamically filled with K podium steps -->
+                    </div>
+
+                    <!-- Ground / Floor Shadow Grid -->
+                    <div class="arena-floor-grid"></div>
+                </div>
+
+                <!-- BOTTOM CONVEYOR BELT -->
+                <div class="conveyor-wrapper">
+                    <div class="conveyor-header">
+                        <span class="conveyor-tag">INCOMING SALES CONVEYOR BELT</span>
+                        <span class="conveyor-speed" id="conveyor-rate-text">Ready for stream</span>
+                    </div>
+                    <div class="conveyor-track" id="conveyor-track">
+                        <div class="conveyor-belt-stripes"></div>
+                        <div class="conveyor-crates" id="conveyor-crates">
+                            <!-- Animated crates slide across here -->
+                        </div>
+                        <div class="conveyor-scanner">
+                            <div class="scanner-laser"></div>
+                            <span class="scanner-label">WASM INGEST</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RIGHT PANEL: DSA LAB -->
+            <aside class="panel right-panel" id="panel-dsa">
+                <div class="panel-header">
+                    <h3>🔬 DSA Lab</h3>
+                    <div class="dsa-tabs" role="tablist">
+                        <button class="tab-btn active" data-tab="tab-heap" role="tab">Heap</button>
+                        <button class="tab-btn" data-tab="tab-hash" role="tab">Hash Map</button>
+                        <button class="tab-btn" data-tab="tab-bench" role="tab">Heap vs Sort</button>
+                        <button class="tab-btn" data-tab="tab-stale" role="tab">Why Heaps Fail</button>
+                        <button class="tab-btn" data-tab="tab-bigo" role="tab">Complexity</button>
+                    </div>
+                </div>
+
+                <div class="panel-scroll">
+                    <!-- TAB 1: HEAP VIEW -->
+                    <div class="tab-content active" id="tab-heap">
+                        <div class="tab-pane-header">
+                            <h4>Size-K Indexed Min-Heap (Binary Tree)</h4>
+                            <p class="tab-sub">Root holds the <strong>minimum (worst)</strong> among the Top K. Any incoming product can check if it qualifies in O(1)!</p>
+                        </div>
+
+                        <!-- Heap Visualizer SVG Tree -->
+                        <div id="heap-tree-visualizer" class="heap-tree-visualizer"></div>
+
+                        <!-- Heap Operation Trace Step Player -->
+                        <div class="trace-box">
+                            <div class="trace-header">
+                                <span class="trace-title">LAST OPERATION TRACE</span>
+                                <div class="trace-controls">
+                                    <button id="trace-prev-btn" class="btn btn-micro" title="Previous step">◀</button>
+                                    <button id="trace-play-btn" class="btn btn-micro" title="Play/Pause">▶</button>
+                                    <button id="trace-next-btn" class="btn btn-micro" title="Next step">▶</button>
+                                    <span id="trace-step-indicator" class="trace-step-indicator">0 / 0</span>
+                                </div>
+                            </div>
+                            <div id="trace-details" class="trace-details">No operation yet. Trigger a sale to inspect siftDown/siftUp steps.</div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: HASH MAP -->
+                    <div class="tab-content" id="tab-hash">
+                        <div class="tab-pane-header">
+                            <h4>Hash Map Table: std::unordered_map</h4>
+                            <p class="tab-sub">Provides <strong>O(1) average-time</strong> frequency updates. Total unique tracked products: <strong id="hash-unique-count">0</strong></p>
+                        </div>
+                        <div class="hash-search-row">
+                            <input type="text" id="hash-search" placeholder="Search product ID..." class="input-text">
+                        </div>
+                        <div class="hash-table-wrapper">
+                            <table class="hash-table" id="hash-table">
+                                <thead>
+                                    <tr>
+                                        <th>Product ID</th>
+                                        <th>Mascot</th>
+                                        <th>Total Sales</th>
+                                        <th>In Top-K?</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="hash-table-body">
+                                    <!-- Populated via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- TAB 3: HEAP VS SORT BENCHMARK -->
+                    <div class="tab-content" id="tab-bench">
+                        <div class="tab-pane-header">
+                            <h4>Real-Time Benchmark & Big-O Curves</h4>
+                            <p class="tab-sub">Compares active <strong>Indexed Min-Heap</strong> vs periodic <strong>Full Sort</strong> vs <strong>Lazy Deletion</strong>.</p>
+                        </div>
+
+                        <div class="benchmark-controls-row">
+                            <div class="bench-param">
+                                <label for="bench-u">Unique Products (U):</label>
+                                <input type="number" id="bench-u" value="200" min="50" max="2000" step="50" class="input-num">
+                            </div>
+                            <div class="bench-param">
+                                <label for="bench-k">Podium Size (K):</label>
+                                <input type="number" id="bench-k" value="5" min="1" max="20" class="input-num">
+                            </div>
+                            <button id="run-benchmark-btn" class="btn btn-accent">⚡ Run Benchmark</button>
+                        </div>
+
+                        <div class="benchmark-canvas-card">
+                            <canvas id="benchmark-chart-canvas" width="480" height="260"></canvas>
+                        </div>
+
+                        <div id="benchmark-verdict" class="benchmark-verdict">
+                            <div class="verdict-title">💡 Plain-English Verdict</div>
+                            <p class="verdict-body">
+                                <strong>Indexed Min-Heap</strong> maintains the Top-K dynamically in <code>O(log K)</code> per sale.
+                                For a stream of N events, it costs only <code>O(N log K)</code>, whereas periodic Sorting costs <code>O(N · U log U)</code>.
+                                When K is small (e.g. K=10) and U is large (e.g. U=100,000), the Indexed Min-Heap is up to <strong>100x faster</strong>!
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- TAB 4: WHY STANDARD HEAPS FAIL -->
+                    <div class="tab-content" id="tab-stale">
+                        <div class="tab-pane-header">
+                            <h4>Why Standard Heaps Fail (std::priority_queue)</h4>
+                            <p class="tab-sub">Standard binary heaps lack an index lookup map (<code>pos</code>), causing updated elements to become <strong>stale and out-of-order</strong>.</p>
+                        </div>
+
+                        <div class="stale-demo-card">
+                            <div class="demo-split">
+                                <div class="demo-column standard-col">
+                                    <div class="col-badge bad">❌ Standard Heap</div>
+                                    <p class="demo-explanation">
+                                        When product count increases, <code>std::priority_queue</code> cannot locate it in O(1).
+                                        It either leaves the node in the wrong position (violating the invariant) or pushes duplicate stale nodes.
+                                    </p>
+                                    <div id="standard-heap-demo-view" class="demo-heap-view">
+                                        <div class="stale-node stale-bad">Root: B (Count: 2) [STALE!]</div>
+                                        <div class="stale-node">Child: A (Count: 1)</div>
+                                    </div>
+                                </div>
+
+                                <div class="demo-column indexed-col">
+                                    <div class="col-badge good">✅ Indexed Min-Heap</div>
+                                    <p class="demo-explanation">
+                                        Maintains <code>unordered_map pos</code>.
+                                        When count updates, <code>updateKey(id)</code> immediately locates index in O(1) and executes <code>siftDown/siftUp</code> in O(log K).
+                                    </p>
+                                    <div id="indexed-heap-demo-view" class="demo-heap-view">
+                                        <div class="stale-node stale-good">Root: A (Count: 1) [ACCURATE]</div>
+                                        <div class="stale-node">Child: B (Count: 2)</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button id="test-stale-btn" class="btn btn-outline-cyan full-width" style="margin-top: 14px;">
+                                🔄 Simulate Count Increase: Watch Invariant Fix
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- TAB 5: COMPLEXITY & LIVE STATS -->
+                    <div class="tab-content" id="tab-bigo">
+                        <div class="tab-pane-header">
+                            <h4>Algorithm Complexity & Live Counters</h4>
+                            <p class="tab-sub">Exact asymptotic time and space bounds for all operations in the C++ core.</p>
+                        </div>
+
+                        <table class="complexity-table">
+                            <thead>
+                                <tr>
+                                    <th>Operation</th>
+                                    <th>Data Structure</th>
+                                    <th>Time</th>
+                                    <th>Space</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Sale Counting</td>
+                                    <td>Hash Map (<code>std::unordered_map</code>)</td>
+                                    <td><span class="badge badge-good">O(1) avg</span></td>
+                                    <td>O(U)</td>
+                                </tr>
+                                <tr>
+                                    <td>Root Check (Worst Top-K)</td>
+                                    <td>Min-Heap Root (<code>heap[0]</code>)</td>
+                                    <td><span class="badge badge-good">O(1)</span></td>
+                                    <td>O(1)</td>
+                                </tr>
+                                <tr>
+                                    <td>Update Existing Product</td>
+                                    <td>Indexed <code>updateKey()</code></td>
+                                    <td><span class="badge badge-good">O(log K)</span></td>
+                                    <td>O(1)</td>
+                                </tr>
+                                <tr>
+                                    <td>Evict & Replace Worst</td>
+                                    <td><code>replaceRoot() + siftDown</code></td>
+                                    <td><span class="badge badge-good">O(log K)</span></td>
+                                    <td>O(1)</td>
+                                </tr>
+                                <tr>
+                                    <td>Retrieve Sorted Top-K</td>
+                                    <td>Heap copy + sort</td>
+                                    <td><span class="badge badge-good">O(K log K)</span></td>
+                                    <td>O(K)</td>
+                                </tr>
+                                <tr>
+                                    <td>Full Re-sort (Alternative)</td>
+                                    <td><code>std::sort</code> on all counts</td>
+                                    <td><span class="badge badge-bad">O(U log U)</span></td>
+                                    <td>O(U)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="live-counters-grid">
+                            <div class="counter-card">
+                                <span class="counter-label">TOTAL COMPARISONS</span>
+                                <span class="counter-value" id="stat-comparisons">0</span>
+                            </div>
+                            <div class="counter-card">
+                                <span class="counter-label">TOTAL HEAP SWAPS</span>
+                                <span class="counter-value" id="stat-swaps">0</span>
+                            </div>
+                            <div class="counter-card">
+                                <span class="counter-label">HEAP OPERATIONS</span>
+                                <span class="counter-value" id="stat-heap-ops">0</span>
+                            </div>
+                            <div class="counter-card">
+                                <span class="counter-label">AVG TIME / SALE</span>
+                                <span class="counter-value neon-green">&lt; 0.001 ms</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </main>
+    </div>
+
+    <!-- ONBOARDING TOUR MODAL -->
+    <div id="tour-modal" class="modal-overlay hidden">
+        <div class="tour-card neon-card">
+            <div class="tour-header">
+                <span class="tour-step-badge" id="tour-step-badge">Step 1 of 5</span>
+                <button id="tour-close-btn" class="icon-btn-close">✕</button>
+            </div>
+            <div class="tour-body" id="tour-body">
+                <!-- Content injected dynamically by JS -->
+            </div>
+            <div class="tour-footer">
+                <button id="tour-skip-btn" class="btn btn-outline">Skip Tour</button>
+                <div class="tour-nav-btns">
+                    <button id="tour-prev-btn" class="btn btn-outline" disabled>◀ Back</button>
+                    <button id="tour-next-btn" class="btn btn-primary">Next ▶</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SELF-TEST RESULTS MODAL -->
+    <div id="test-modal" class="modal-overlay hidden">
+        <div class="modal-card neon-card">
+            <div class="modal-header">
+                <h3>🧪 C++ WebAssembly Self-Test Suite</h3>
+                <button id="test-modal-close" class="icon-btn-close">✕</button>
+            </div>
+            <div class="modal-body">
+                <p>Verifying all required algorithmic assertions directly in the WebAssembly engine:</p>
+                <div id="test-results-log" class="test-results-log">Running tests...</div>
+            </div>
+            <div class="modal-footer">
+                <button id="rerun-tests-btn" class="btn btn-primary">🔄 Re-run All Tests</button>
+                <button id="close-tests-btn" class="btn btn-outline">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main JS Orchestrator -->
+    <script type="module" src="app.js"></script>
+</body>
+</html>
