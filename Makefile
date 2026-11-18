@@ -33,3 +33,4 @@ serve: build
 
 clean:
 	rm -rf dist test_runner web/core.js web/core.wasm run_tests
+

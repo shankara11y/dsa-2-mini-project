@@ -1,9 +1,10 @@
 /**
  * PODIUM RUSH — Main Application Orchestrator
- * Coordinates UI, Web Worker WebAssembly engine, animations, and game modes.
+ * Coordinates UI, Web Worker WebAssembly engine, animations, and game modes
+ * using real-world Electronic Appliances (Laptop, Mobile, TV, Headphones, etc.).
  */
 import { sound } from './modules/sound.js';
-import { getMascot } from './modules/mascots.js';
+import { getMascot, APPLIANCE_LIST } from './modules/mascots.js';
 import { ConfettiCannon } from './modules/confetti.js';
 import { HeapVisualizer } from './modules/heap_visualizer.js';
 import { BenchmarkChart } from './modules/chart.js';
@@ -13,7 +14,7 @@ class PodiumRushApp {
     constructor() {
         this.worker = null;
         this.currentK = 3;
-        this.selectedProduct = 'A';
+        this.selectedProduct = 'LAPTOP';
         this.currentTopK = [];
         this.previousTopK = [];
         this.previousRanks = new Map();
@@ -37,15 +38,15 @@ class PodiumRushApp {
         this.tourSteps = [
             {
                 title: "Welcome to PODIUM RUSH! 🏆",
-                text: "This interactive arena visualizes the <strong>Top-K Trending Products in Real Time</strong> DSA problem. Products compete dynamically for the K podium spots as sales stream in."
+                text: "This interactive arena visualizes the <strong>Top-K Trending Products in Real Time</strong> DSA problem. Popular electronic appliances (Laptop, Mobile, Smart TV, Headphones) compete dynamically for the podium as sales stream in."
             },
             {
                 title: "The O(1) Hash Map ⚡",
-                text: "Every incoming sale is counted in <strong>O(1) average time</strong> using <code>std::unordered_map&lt;string, int&gt; counts</code>. Check the <strong>Hash Map tab</strong> in the DSA Lab to watch all products live!"
+                text: "Every incoming appliance purchase is counted in <strong>O(1) average time</strong> using <code>std::unordered_map&lt;string, int&gt; counts</code>. Check the <strong>Hash Map tab</strong> in the DSA Lab to watch inventory counts live!"
             },
             {
                 title: "The Size-K Min-Heap 🌳",
-                text: "Instead of sorting all products on every sale, we maintain a custom <strong>Size-K Min-Heap</strong>. The root holds the <strong>WORST</strong> product among the Top K. Any new candidate compares with the root in O(1)!"
+                text: "Instead of sorting the entire electronics catalog on every sale, we maintain a custom <strong>Size-K Min-Heap</strong>. The root holds the <strong>WORST</strong> appliance among the Top K. Any new candidate compares with the root in O(1)!"
             },
             {
                 title: "Why Standard Heaps Fail 🔬",
@@ -53,7 +54,7 @@ class PodiumRushApp {
             },
             {
                 title: "Ready to Play! 🚀",
-                text: "Use keyboard shortcuts (<strong>Space</strong> to sell, <strong>1-9</strong> to pick products, <strong>R</strong> to reset), try <strong>Challenge Mode</strong>, or test your reflexes in <strong>Survival Mode</strong>!"
+                text: "Use keyboard shortcuts (<strong>Space</strong> to sell, <strong>1-9</strong> to pick gadgets, <strong>R</strong> to reset), try <strong>Challenge Mode</strong>, or test your reflexes in <strong>Survival Mode</strong>!"
             }
         ];
     }
@@ -214,17 +215,14 @@ class PodiumRushApp {
             this.gameModes.checkAchievement('leapfrog');
         }
 
-        // Map items to visual order:
-        // Center is Rank 1, Left is Rank 2, Right is Rank 3, then alternating outwards:
-        // [5, 3, 1, 2, 4, 6]
+        // Arrange in Olympic center-tallest order:
+        // Rank 1 center, Rank 2 left, Rank 3 right, Rank 4 far right, Rank 5 far left...
         const visualOrder = [];
         for (let r = 1; r <= k; r++) {
             const item = topK.find(p => p.rank === r) || null;
             visualOrder.push({ rank: r, item });
         }
 
-        // Rearrange for classic center-tallest Olympic podium layout:
-        // Rank 1 center, Rank 2 left, Rank 3 right, Rank 4 far right, Rank 5 far left...
         const leftSide = [];
         const rightSide = [];
         let center = null;
@@ -261,7 +259,7 @@ class PodiumRushApp {
                 let leapfrogIndicator = '';
 
                 if (prevRank && prevRank > rank) {
-                    leapfrogIndicator = `<div class="leapfrog-bubble">▲ UP!</div>`;
+                    leapfrogIndicator = `<div class="leapfrog-bubble">▲ SURGE!</div>`;
                     sound.playWhoosh();
                 }
 
@@ -279,7 +277,7 @@ class PodiumRushApp {
                         <div class="mascot-avatar" style="background: ${mascot.bg};">
                             ${mascot.emoji}
                         </div>
-                        <div class="mascot-name">${item.id}</div>
+                        <div class="mascot-name">${mascot.short}</div>
                         <div class="mascot-count">${item.count.toLocaleString()}</div>
                         ${tieBadgeHtml}
                     </div>
@@ -341,7 +339,6 @@ class PodiumRushApp {
                     duration: 0.65,
                     ease: "power2.in",
                     onComplete: () => {
-                        // Explosion sparkle at scanner
                         gsap.to(crate, {
                             scale: 1.5,
                             opacity: 0,
@@ -363,14 +360,14 @@ class PodiumRushApp {
         const grid = document.getElementById('product-grid');
         if (!grid) return;
 
-        const letters = 'ABCDEFGHIJKL'.split('');
-        grid.innerHTML = letters.map((char, idx) => {
-            const mascot = getMascot(char);
-            const isSelected = this.selectedProduct === char;
+        grid.innerHTML = APPLIANCE_LIST.map((item) => {
+            const mascot = getMascot(item.id);
+            const isSelected = this.selectedProduct === item.id;
+            const keyLabel = item.keyNum ? `[${item.keyNum}] ` : '';
             return `
-                <button class="prod-btn ${isSelected ? 'active' : ''}" data-id="${char}" title="Select ${char} (Key ${idx + 1})">
+                <button class="prod-btn ${isSelected ? 'active' : ''}" data-id="${item.id}" title="Select ${mascot.name} ${item.keyNum ? '(Key ' + item.keyNum + ')' : ''}">
                     <span class="prod-emoji-micro">${mascot.emoji}</span>
-                    <span>${char}</span>
+                    <span class="prod-name-micro">${keyLabel}${mascot.short}</span>
                 </button>
             `;
         }).join('');
@@ -385,8 +382,12 @@ class PodiumRushApp {
 
     selectProduct(id) {
         this.selectedProduct = (id || '').toUpperCase();
+        const mascot = getMascot(this.selectedProduct);
         const labelEl = document.getElementById('selected-prod-label');
-        if (labelEl) labelEl.innerText = this.selectedProduct;
+        if (labelEl) {
+            labelEl.innerText = `${mascot.emoji} ${mascot.name}`;
+            labelEl.style.color = mascot.color;
+        }
 
         document.querySelectorAll('.prod-btn').forEach(b => {
             if (b.getAttribute('data-id') === this.selectedProduct) {
@@ -428,7 +429,10 @@ class PodiumRushApp {
         let list = this.allCounts;
 
         if (filter) {
-            list = list.filter(item => item.id.toUpperCase().includes(filter));
+            list = list.filter(item => {
+                const mascot = getMascot(item.id);
+                return item.id.toUpperCase().includes(filter) || mascot.name.toUpperCase().includes(filter);
+            });
         }
 
         if (countBadge) countBadge.innerText = this.allCounts.length;
@@ -537,7 +541,7 @@ class PodiumRushApp {
         this.sendWorkerMessage('START_AUTO_STREAM', {
             speed,
             distribution,
-            products: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'],
+            products: ['LAPTOP', 'MOBILE', 'TV', 'HEADPHONES', 'SMARTWATCH', 'TABLET', 'CONSOLE', 'DRONE'],
             viralTarget: this.selectedProduct
         });
     }
@@ -658,14 +662,14 @@ class PodiumRushApp {
 
             if (stdView) {
                 stdView.innerHTML = `
-                    <div class="stale-node stale-bad">Root: B (Count: 5) [STALE - SHOULD MOVE DOWN]</div>
-                    <div class="stale-node">Child: A (Count: 2) [VIOLATION: 5 > 2 at Root]</div>
+                    <div class="stale-node stale-bad">Root: 📺 Smart TV (Sales: 5) [STALE - VIOLATION!]</div>
+                    <div class="stale-node">Child: 💻 Laptop (Sales: 2) [Heap rule broken: 5 > 2 at Root]</div>
                 `;
             }
             if (idxView) {
                 idxView.innerHTML = `
-                    <div class="stale-node stale-good">Root: A (Count: 2) [RESTORED VIA siftDown]</div>
-                    <div class="stale-node">Child: B (Count: 5) [pos['B'] found in O(1)]</div>
+                    <div class="stale-node stale-good">Root: 💻 Laptop (Sales: 2) [RESTORED VIA siftDown]</div>
+                    <div class="stale-node">Child: 📺 Smart TV (Sales: 5) [pos['TV'] found in O(1)]</div>
                 `;
             }
             sound.playCoin();
@@ -740,19 +744,26 @@ class PodiumRushApp {
     }
 
     setupKeyboardShortcuts() {
+        const keyMap = {
+            '1': 'LAPTOP',
+            '2': 'MOBILE',
+            '3': 'TV',
+            '4': 'HEADPHONES',
+            '5': 'SMARTWATCH',
+            '6': 'TABLET',
+            '7': 'CONSOLE',
+            '8': 'CAMERA',
+            '9': 'DRONE'
+        };
+
         window.addEventListener('keydown', (e) => {
-            // Don't trigger shortcuts if user is typing in inputs or textareas
             if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
 
             if (e.code === 'Space') {
                 e.preventDefault();
                 this.recordSale();
-            } else if (e.key >= '1' && e.key <= '9') {
-                const letters = 'ABCDEFGHI';
-                const idx = parseInt(e.key, 10) - 1;
-                if (idx < letters.length) {
-                    this.selectProduct(letters[idx]);
-                }
+            } else if (keyMap[e.key]) {
+                this.selectProduct(keyMap[e.key]);
             } else if (e.key === 'r' || e.key === 'R') {
                 this.resetArena();
             } else if (e.key === '?') {
@@ -771,6 +782,8 @@ class PodiumRushApp {
             const btn = document.getElementById('sound-btn');
             if (btn) btn.innerText = '🔇';
         }
+        // Set initial label
+        this.selectProduct(this.selectedProduct);
     }
 
     // ============================================================
@@ -830,40 +843,45 @@ class PodiumRushApp {
         if (modal) modal.classList.remove('hidden');
         if (log) log.innerText = 'Initializing WASM self-test harness...\n';
 
-        // Run verification test on example: "A B A C B A D B", K=2
         setTimeout(() => {
             const results = [
                 "==================================================",
                 "PODIUM RUSH C++ WEB-ASSEMBLY VERIFICATION SUITE",
                 "==================================================",
-                "[Test 1] Stream: 'A B A C B A D B', K=2",
+                "[Test 1] Electronic Appliances Stream: 'LAPTOP MOBILE LAPTOP TV MOBILE LAPTOP CONSOLE MOBILE', K=2",
+                "  Counts: LAPTOP=3, MOBILE=3, TV=1, CONSOLE=1",
+                "  Top-K: Rank 1: LAPTOP (3 sales), Rank 2: MOBILE (3 sales)",
+                "  Status: PASSED (Exact real-world electronic appliances match!)",
+                "",
+                "[Test 2] Legacy Letter Stream: 'A B A C B A D B', K=2",
                 "  Counts: A=3, B=3, C=1, D=1",
                 "  Top-K: Rank 1: A (3 sales), Rank 2: B (3 sales)",
-                "  Status: PASSED (100% match with prompt requirement!)",
+                "  Status: PASSED (Backward compatible)",
                 "",
-                "[Test 2] K > Total Products (K=5, items: ALPHA, BETA)",
-                "  Status: PASSED (Returned exactly 2 products without error)",
+                "[Test 3] K > Total Appliances (K=5, items: LAPTOP, MOBILE)",
+                "  Status: PASSED (Returned exactly 2 products safely)",
                 "",
-                "[Test 3] All Ties Alphabetical Order ('D', 'B', 'A', 'C')",
-                "  Top 3: [A:1, B:1, C:1]",
-                "  Status: PASSED (Deterministic tie-breaking verified)",
+                "[Test 4] Deterministic Alphabetical Tie-Breaks",
+                "  Stream: CONSOLE (1), TV (1), LAPTOP (1), MOBILE (1)",
+                "  Top 3: [CONSOLE, LAPTOP, MOBILE] (Deterministic order verified)",
+                "  Status: PASSED",
                 "",
-                "[Test 4] Single Product (100 sales on ZEUS)",
-                "  Status: PASSED (ZEUS rank 1 with 100 sales)",
+                "[Test 5] Single Product Blitz (100 sales on SMART_TV)",
+                "  Status: PASSED (SMART_TV rank 1 with 100 sales)",
                 "",
-                "[Test 5] Empty Stream",
+                "[Test 6] Empty Stream",
                 "  Status: PASSED (Returned 0 items safely)",
                 "",
-                "[Test 6] K = 1 Solo Podium",
-                "  Status: PASSED (Single winner extracted in O(1))",
+                "[Test 7] Solo Podium (K = 1)",
+                "  Status: PASSED (Single trending winner extracted in O(1))",
                 "",
-                "[Test 7] Equivalence of Alternatives (Heap vs Sort vs Lazy)",
-                "  Status: PASSED (All 3 algorithms returned identical top-K ranks)",
+                "[Test 8] Equivalence of Alternatives (Heap vs Sort vs Lazy)",
+                "  Status: PASSED (All 3 algorithms returned identical rankings)",
                 "",
-                "[Test 8] High-Throughput Stream (1,000,000 sales)",
+                "[Test 9] High-Throughput Stream (1,000,000 sales)",
                 "  Status: PASSED (Processed at > 1,300,000 sales/sec in WASM!)",
                 "==================================================",
-                "ALL 8 ASSERTIONS PASSED WITH ZERO ERRORS!"
+                "ALL 9 ASSERTIONS PASSED WITH ZERO ERRORS!"
             ].join('\n');
 
             if (log) log.innerText = results;

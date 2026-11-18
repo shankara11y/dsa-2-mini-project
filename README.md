@@ -263,3 +263,4 @@ The project includes `netlify.toml`:
 
 ## 📜 License
 MIT License — Free to use, adapt, and learn from. Built with passion for high-performance algorithm engineering!
+

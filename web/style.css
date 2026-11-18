@@ -458,31 +458,33 @@ html, body {
 /* Product Quick Select Grid */
 .product-grid {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 6px;
     margin-bottom: 10px;
 }
 
 .prod-btn {
-    aspect-ratio: 1;
+    min-height: 50px;
+    padding: 6px 4px;
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     color: var(--text-primary);
     font-family: var(--font-heading);
-    font-size: 0.85rem;
+    font-size: 0.72rem;
     font-weight: 700;
     cursor: pointer;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 2px;
     transition: all var(--transition-fast);
 }
 
 .prod-btn:hover {
     border-color: var(--neon-cyan);
-    transform: scale(1.06);
+    transform: translateY(-2px);
 }
 
 .prod-btn.active {
@@ -493,7 +495,20 @@ html, body {
 }
 
 .prod-emoji-micro {
-    font-size: 0.85rem;
+    font-size: 1.15rem;
+}
+
+.prod-name-micro {
+    font-size: 0.64rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    color: var(--text-secondary);
+}
+
+.prod-btn.active .prod-name-micro {
+    color: #ffffff;
 }
 
 .custom-id-row {
@@ -1817,3 +1832,4 @@ html, body {
         scroll-behavior: auto !important;
     }
 }
+

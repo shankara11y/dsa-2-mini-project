@@ -99,19 +99,19 @@
                 <div class="panel-scroll">
                     <!-- Product Quick-Select Grid -->
                     <div class="control-section">
-                        <label class="section-label">SELECT PRODUCT TO SELL (Keys 1-9):</label>
+                        <label class="section-label">SELECT APPLIANCE TO SELL (Keys 1-9):</label>
                         <div class="product-grid" id="product-grid">
-                            <!-- Populated dynamically via JS with mascots -->
+                            <!-- Populated dynamically via JS with electronic appliances -->
                         </div>
                         <div class="custom-id-row">
-                            <input type="text" id="custom-prod-input" placeholder="Custom ID (e.g. VIP_1)" maxlength="12" class="input-text">
+                            <input type="text" id="custom-prod-input" placeholder="Custom Gadget (e.g. MICROWAVE)" maxlength="16" class="input-text">
                             <button id="add-custom-btn" class="btn btn-small btn-accent">+ Pick</button>
                         </div>
                     </div>
 
                     <!-- Instant Sale Triggers -->
                     <div class="control-section">
-                        <label class="section-label">SALES TRIGGER (Active: <strong id="selected-prod-label" class="neon-magenta">A</strong>):</label>
+                        <label class="section-label">SALES TRIGGER (Active: <strong id="selected-prod-label" class="neon-magenta">💻 Ultra Laptop</strong>):</label>
                         <div class="btn-grid-2">
                             <button id="sell-1-btn" class="btn btn-action">⚡ Sell 1 (Space)</button>
                             <button id="sell-10-btn" class="btn btn-action">⚡ Sell x10</button>
@@ -143,14 +143,14 @@
                     <!-- Custom Event Stream Replay -->
                     <div class="control-section">
                         <div class="section-header-row">
-                            <label class="section-label">STREAM REPLAY & PRESETS</label>
+                            <label class="section-label">APPLIANCES STREAM REPLAY & PRESETS</label>
                         </div>
                         <div class="preset-pills">
-                            <button class="pill-btn" data-stream="A B A C B A D B">Example (A B A C B A D B)</button>
-                            <button class="pill-btn" data-stream="A B C D A B C D A B">Ties Showdown</button>
-                            <button class="pill-btn" data-stream="A A A B B C D E F G H A Z Z Z Z Z">Underdog Surge</button>
+                            <button class="pill-btn" data-stream="LAPTOP MOBILE LAPTOP TV MOBILE LAPTOP CONSOLE MOBILE">Example (Laptop, Mobile, TV)</button>
+                            <button class="pill-btn" data-stream="LAPTOP MOBILE TV HEADPHONES LAPTOP MOBILE TV HEADPHONES">Ties Showdown</button>
+                            <button class="pill-btn" data-stream="TV TV TV MOBILE MOBILE LAPTOP DRONE VR_HEADSET VR_HEADSET VR_HEADSET">Viral Flash Surge</button>
                         </div>
-                        <textarea id="stream-input" class="textarea-stream" rows="2" placeholder="Paste stream e.g. A B A C B A D B">A B A C B A D B</textarea>
+                        <textarea id="stream-input" class="textarea-stream" rows="2" placeholder="Paste stream e.g. LAPTOP MOBILE LAPTOP TV MOBILE LAPTOP CONSOLE MOBILE">LAPTOP MOBILE LAPTOP TV MOBILE LAPTOP CONSOLE MOBILE</textarea>
                         <div class="replay-btn-row">
                             <button id="replay-play-btn" class="btn btn-small btn-outline-cyan">▶ Play All</button>
                             <button id="replay-step-btn" class="btn btn-small btn-outline-gold">⏭ Step (1)</button>
@@ -467,3 +467,4 @@
     <script type="module" src="app.js"></script>
 </body>
 </html>
+

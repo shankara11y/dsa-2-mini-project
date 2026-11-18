@@ -5,6 +5,24 @@
 #include <string>
 #include <sstream>
 
+void testElectronicAppliancesStream() {
+    std::cout << "[Test 0] Testing Appliances stream: 'LAPTOP MOBILE LAPTOP TV MOBILE LAPTOP CONSOLE MOBILE', K=2 ...\n";
+    TrendingTracker tracker(2);
+    std::vector<std::string> stream = {"LAPTOP", "MOBILE", "LAPTOP", "TV", "MOBILE", "LAPTOP", "CONSOLE", "MOBILE"};
+    for (const auto& item : stream) {
+        tracker.recordSale(item);
+    }
+
+    auto top = tracker.getTopK();
+    assert(top.size() == 2);
+    // LAPTOP: 3, MOBILE: 3. Alphabetical tie-break: 'LAPTOP' < 'MOBILE' -> LAPTOP is rank 1, MOBILE is rank 2!
+    assert(top[0].id == "LAPTOP" && top[0].count == 3 && top[0].rank == 1);
+    assert(top[1].id == "MOBILE" && top[1].count == 3 && top[1].rank == 2);
+
+    std::cout << "  -> PASSED: Top Appliances: " << top[0].id << " (" << top[0].count
+              << "), " << top[1].id << " (" << top[1].count << ")\n";
+}
+
 void testStandardStream() {
     std::cout << "[Test 1] Testing stream: 'A B A C B A D B', K=2 ...\n";
     TrendingTracker tracker(2);
@@ -145,6 +163,7 @@ int main() {
     std::cout << "RUNNING PODIUM RUSH C++ TEST SUITE\n";
     std::cout << "========================================\n";
 
+    testElectronicAppliancesStream();
     testStandardStream();
     testKGreaterThanProducts();
     testAllTies();
@@ -159,3 +178,4 @@ int main() {
     std::cout << "========================================\n";
     return 0;
 }
+

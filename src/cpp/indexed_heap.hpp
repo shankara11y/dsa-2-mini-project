@@ -284,3 +284,4 @@ public:
         trace.clear();
     }
 };
+

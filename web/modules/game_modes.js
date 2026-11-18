@@ -1,8 +1,10 @@
 /**
  * Game Modes and Gamification Layer for PODIUM RUSH.
- * Handles Challenge Mode, Survival Mode, Achievements, and Local Leaderboards.
+ * Handles Challenge Mode, Survival Mode, Achievements, and Local Leaderboards
+ * using real-world Electronic Appliances (Laptop, Mobile, TV, etc.).
  */
 import { sound } from './sound.js';
+import { getMascot } from './mascots.js';
 
 export class GameModes {
     constructor(app) {
@@ -17,7 +19,7 @@ export class GameModes {
         this.challengeStreak = 0;
 
         // Survival Mode State
-        this.survivalChampion = null;
+        this.survivalChampion = 'LAPTOP';
         this.survivalTimer = null;
         this.survivalDecayTimer = null;
         this.survivalSecondsLeft = 45;
@@ -28,14 +30,14 @@ export class GameModes {
         this.leaderboard = JSON.parse(localStorage.getItem('podium_rush_leaderboard') || '[]');
 
         this.achievementDefs = [
-            { id: 'first_sale', title: 'First Sale!', desc: 'The marketplace arena awakens.', icon: '⚡' },
-            { id: 'leapfrog', title: 'Leapfrog Master!', desc: 'Overtook the leader to claim 1st place.', icon: '👑' },
-            { id: 'tie_breaker', title: 'Tie-Breaker!', desc: 'Won a podium spot via alphabetical tie-break.', icon: '⚖️' },
-            { id: 'heap_hero', title: 'Heap Hero!', desc: 'Processed 500 sales in the arena.', icon: '🛡️' },
-            { id: 'turbo_10k', title: 'Turbo 10,000!', desc: 'Handled 10,000 sales at WASM speed.', icon: '🚀' },
+            { id: 'first_sale', title: 'First Sale!', desc: 'Sold your first electronic gadget.', icon: '⚡' },
+            { id: 'leapfrog', title: 'Podium Surge!', desc: 'Overtook the leader to claim #1 Top Trending appliance.', icon: '👑' },
+            { id: 'tie_breaker', title: 'Tie-Breaker!', desc: 'Won a podium spot via deterministic tie-break.', icon: '⚖️' },
+            { id: 'heap_hero', title: 'Retail Titan!', desc: 'Processed 500 electronics sales in the arena.', icon: '🛡️' },
+            { id: 'turbo_10k', title: 'Black Friday 10k!', desc: 'Handled 10,000 gadget sales at WASM speed.', icon: '🚀' },
             { id: 'scholar', title: 'DSA Scholar!', desc: 'Ran the Heap vs Sort benchmark.', icon: '📊' },
             { id: 'debunker', title: 'Mythbuster!', desc: 'Tested Why Standard Heaps Fail demo.', icon: '🔬' },
-            { id: 'survival_survivor', title: 'Arena Champion!', desc: 'Survive 45 seconds in Survival Mode.', icon: '🏆' }
+            { id: 'survival_survivor', title: 'Arena Champion!', desc: 'Protected your appliance on the podium for 45s.', icon: '🏆' }
         ];
     }
 
@@ -53,7 +55,7 @@ export class GameModes {
     // CHALLENGE MODE
     // ============================================================
     initChallenge() {
-        const products = ['A', 'B', 'C', 'D', 'E', 'F'];
+        const appliances = ['LAPTOP', 'MOBILE', 'TV', 'HEADPHONES', 'SMARTWATCH', 'CONSOLE'];
         const streamLength = Math.floor(Math.random() * 20) + 25; // 25-45 sales
         this.challengeStream = [];
 
@@ -61,11 +63,11 @@ export class GameModes {
         for (let i = 0; i < streamLength; i++) {
             const r = Math.random();
             let p;
-            if (r < 0.35) p = 'A';
-            else if (r < 0.60) p = 'B';
-            else if (r < 0.80) p = 'C';
-            else if (r < 0.92) p = 'D';
-            else p = products[Math.floor(Math.random() * products.length)];
+            if (r < 0.35) p = 'LAPTOP';
+            else if (r < 0.60) p = 'MOBILE';
+            else if (r < 0.80) p = 'TV';
+            else if (r < 0.92) p = 'HEADPHONES';
+            else p = appliances[Math.floor(Math.random() * appliances.length)];
             this.challengeStream.push(p);
         }
 
@@ -77,26 +79,30 @@ export class GameModes {
         const container = document.getElementById('game-mode-panel');
         if (!container) return;
 
-        const options = ['A', 'B', 'C', 'D', 'E', 'F'].map(id => `
-            <button class="btn btn-outline challenge-pick-btn ${this.challengePredictedId === id ? 'selected' : ''}" data-id="${id}">
-                Predict ${id}
-            </button>
-        `).join('');
+        const appliances = ['LAPTOP', 'MOBILE', 'TV', 'HEADPHONES', 'SMARTWATCH', 'CONSOLE'];
+        const options = appliances.map(id => {
+            const mascot = getMascot(id);
+            return `
+                <button class="btn btn-outline challenge-pick-btn ${this.challengePredictedId === id ? 'selected' : ''}" data-id="${id}">
+                    ${mascot.emoji} ${mascot.short}
+                </button>
+            `;
+        }).join('');
 
         container.innerHTML = `
             <div class="game-card neon-card">
                 <div class="game-card-header">
-                    <h4>🎯 Challenge Mode: Predict the Top-1 Winner!</h4>
+                    <h4>🎯 Challenge Mode: Predict the #1 Trending Appliance!</h4>
                     <span class="badge badge-accent">Streak: ${this.challengeStreak}</span>
                 </div>
                 <p class="game-desc">
-                    A hidden stream of <strong>${this.challengeStream.length} sales</strong> is queued.
-                    Predict which product will reach Rank #1 before the replay finishes!
+                    A flash-sale queue of <strong>${this.challengeStream.length} electronic sales</strong> is incoming.
+                    Predict which gadget will claim Rank #1 on the podium!
                 </p>
                 <div class="challenge-options-grid">${options}</div>
                 <div class="game-actions">
                     <button id="start-challenge-btn" class="btn btn-primary" ${!this.challengePredictedId ? 'disabled' : ''}>
-                        🚀 Lock In & Run Stream
+                        🚀 Lock In & Run Flash Stream
                     </button>
                 </div>
                 <div id="challenge-result-banner" class="challenge-result-banner hidden"></div>
@@ -119,15 +125,13 @@ export class GameModes {
     runChallenge() {
         if (!this.challengePredictedId) return;
 
-        // Reset arena tracker first
         this.app.resetArena(() => {
             const resultBanner = document.getElementById('challenge-result-banner');
             if (resultBanner) {
                 resultBanner.className = 'challenge-result-banner running';
-                resultBanner.innerHTML = '⚡ Replaying challenge stream at 25 events/sec...';
+                resultBanner.innerHTML = '⚡ Replaying incoming gadget sales at 25 events/sec...';
             }
 
-            // Stream items step-by-step
             let idx = 0;
             const timer = setInterval(() => {
                 if (idx < this.challengeStream.length) {
@@ -149,6 +153,7 @@ export class GameModes {
         if (!winner || !resultBanner) return;
 
         const isCorrect = winner.id === this.challengePredictedId;
+        const mascot = getMascot(winner.id);
 
         if (isCorrect) {
             this.challengeStreak++;
@@ -156,7 +161,7 @@ export class GameModes {
             sound.playFanfare();
             resultBanner.className = 'challenge-result-banner win';
             resultBanner.innerHTML = `
-                🎉 <strong>CORRECT!</strong> ${winner.id} finished Rank #1 with ${winner.count} sales!<br>
+                🎉 <strong>CORRECT!</strong> ${mascot.emoji} <strong>${mascot.name}</strong> claimed Rank #1 with ${winner.count} sales!<br>
                 +${100 * this.challengeStreak} pts! Current Streak: ${this.challengeStreak}
             `;
             this.checkAchievement('heap_hero');
@@ -166,7 +171,7 @@ export class GameModes {
             sound.playError();
             resultBanner.className = 'challenge-result-banner lose';
             resultBanner.innerHTML = `
-                ❌ <strong>CLOSE!</strong> You picked ${this.challengePredictedId}, but ${winner.id} won Rank #1 (${winner.count} sales).
+                ❌ <strong>CLOSE!</strong> You predicted ${this.challengePredictedId}, but ${mascot.emoji} ${mascot.name} took #1 (${winner.count} sales).
             `;
         }
     }
@@ -175,7 +180,7 @@ export class GameModes {
     // SURVIVAL MODE
     // ============================================================
     initSurvival() {
-        this.survivalChampion = 'A';
+        this.survivalChampion = 'LAPTOP';
         this.survivalSecondsLeft = 45;
         this.survivalScore = 0;
         this.renderSurvivalUI();
@@ -185,24 +190,30 @@ export class GameModes {
         const container = document.getElementById('game-mode-panel');
         if (!container) return;
 
-        const options = ['A', 'B', 'C', 'D'].map(id => `
-            <button class="btn btn-outline survival-champ-btn ${this.survivalChampion === id ? 'selected' : ''}" data-id="${id}">
-                ${id}
-            </button>
-        `).join('');
+        const appliances = ['LAPTOP', 'MOBILE', 'TV', 'HEADPHONES'];
+        const options = appliances.map(id => {
+            const mascot = getMascot(id);
+            return `
+                <button class="btn btn-outline survival-champ-btn ${this.survivalChampion === id ? 'selected' : ''}" data-id="${id}">
+                    ${mascot.emoji} ${mascot.short}
+                </button>
+            `;
+        }).join('');
+
+        const champMascot = getMascot(this.survivalChampion);
 
         container.innerHTML = `
             <div class="game-card neon-card">
                 <div class="game-card-header">
-                    <h4>🔥 Survival Mode: Protect Your Podium Spot!</h4>
+                    <h4>🔥 Survival Mode: Defend Your Appliance on the Podium!</h4>
                     <span class="badge badge-warning">Time Left: <span id="survival-timer-display">${this.survivalSecondsLeft}s</span></span>
                 </div>
                 <p class="game-desc">
-                    Competitors are relentlessly buying other products!
-                    Keep your Champion <strong>Agent ${this.survivalChampion}</strong> inside the Top ${this.app.currentK || 3} podium by clicking rapidly!
+                    Competitors are relentlessly buying rival electronics!
+                    Keep your <strong>${champMascot.emoji} ${champMascot.name}</strong> inside the Top ${this.app.currentK || 3} podium by clicking / pressing Spacebar rapidly!
                 </p>
                 <div class="survival-champ-select">
-                    <label>Choose Champion:</label>
+                    <label>Choose Your Device:</label>
                     <div class="btn-group">${options}</div>
                 </div>
                 <div class="game-actions">
@@ -210,7 +221,7 @@ export class GameModes {
                         🛡️ Start Survival Match
                     </button>
                     <button id="boost-champ-btn" class="btn btn-accent btn-large hidden">
-                        ⚡ Sell for Agent ${this.survivalChampion}! (SPACEBAR)
+                        ⚡ Sell ${champMascot.emoji} ${champMascot.short}! (SPACEBAR)
                     </button>
                 </div>
                 <div id="survival-status" class="survival-status"></div>
@@ -237,11 +248,10 @@ export class GameModes {
         if (boostBtn) boostBtn.classList.remove('hidden');
 
         this.app.resetArena(() => {
-            // Give champion initial seed sales
+            // Seed initial sales
             for (let i = 0; i < 5; i++) this.app.recordSale(this.survivalChampion);
-            // Give competitors sales
-            for (let i = 0; i < 4; i++) this.app.recordSale('B');
-            for (let i = 0; i < 4; i++) this.app.recordSale('C');
+            for (let i = 0; i < 4; i++) this.app.recordSale('MOBILE');
+            for (let i = 0; i < 4; i++) this.app.recordSale('TV');
 
             this.survivalSecondsLeft = 45;
             this.survivalScore = 0;
@@ -269,7 +279,7 @@ export class GameModes {
             }, 1000);
 
             // Competitor incoming attack stream
-            const competitors = ['B', 'C', 'D', 'E', 'F'];
+            const competitors = ['MOBILE', 'TV', 'HEADPHONES', 'SMARTWATCH', 'CONSOLE', 'DRONE'];
             this.survivalDecayTimer = setInterval(() => {
                 const target = competitors[Math.floor(Math.random() * competitors.length)];
                 this.app.recordSale(target);
@@ -287,6 +297,7 @@ export class GameModes {
         const boostBtn = document.getElementById('boost-champ-btn');
         const startBtn = document.getElementById('start-survival-btn');
         const statusEl = document.getElementById('survival-status');
+        const champMascot = getMascot(this.survivalChampion);
 
         if (boostBtn) boostBtn.classList.add('hidden');
         if (startBtn) startBtn.classList.remove('hidden');
@@ -298,8 +309,8 @@ export class GameModes {
             if (statusEl) {
                 statusEl.innerHTML = `
                     <div class="alert alert-success">
-                        🏆 <strong>VICTORY!</strong> You protected Agent ${this.survivalChampion} for the full 45s!
-                        Score: ${this.survivalScore} pts!
+                        🏆 <strong>VICTORY!</strong> You kept ${champMascot.emoji} ${champMascot.name} on the podium for the full 45s!
+                        Final Score: ${this.survivalScore} pts!
                     </div>
                 `;
             }
@@ -308,8 +319,8 @@ export class GameModes {
             if (statusEl) {
                 statusEl.innerHTML = `
                     <div class="alert alert-danger">
-                        💀 <strong>KNOCKED OFF PODIUM!</strong> Agent ${this.survivalChampion} fell out of the Top-K.
-                        Survival Time: ${45 - this.survivalSecondsLeft}s. Try again!
+                        💀 <strong>KNOCKED OFF PODIUM!</strong> ${champMascot.emoji} ${champMascot.short} fell out of the Top-K.
+                        Survived: ${45 - this.survivalSecondsLeft}s. Try again!
                     </div>
                 `;
             }
@@ -356,10 +367,7 @@ export class GameModes {
         `;
         document.body.appendChild(toast);
 
-        setTimeout(() => {
-            toast.classList.add('show');
-        }, 50);
-
+        setTimeout(() => toast.classList.add('show'), 50);
         setTimeout(() => {
             toast.classList.remove('show');
             setTimeout(() => toast.remove(), 400);
